@@ -1,0 +1,70 @@
+---
+# Vector Indexer File Watcher Configuration
+
+watcher:
+  # Directories to watch for file changes
+  watch_paths:
+    - /srv/latvian_mcp
+    - /srv/latvian_xtts
+    - /srv/latvian_learning
+    - /home/david/claude-mpm
+    - /home/david/.claude/skills  # High-priority: Claude Skills Library (264 MD files, ~1.5M tokens)
+
+  # Patterns to exclude from indexing
+  exclude_patterns:
+    - __pycache__
+    - .git
+    - node_modules
+    - venv
+    - .venv
+    - env  # Exclude env/ directories (e.g., /srv/latvian_xtts/env/)
+    - site-packages  # Extra safety: exclude site-packages directly
+    - dist
+    - build
+    - .pytest_cache
+    - .mypy_cache
+    - .ruff_cache
+    - cache
+    - logs
+    - test-results
+    - .Trash-1000
+    - tmp
+    - media
+    - artifacts
+    - CODEX_archive
+    - models
+    - data
+    - outputs
+    - archive
+    - corpus
+    - "*.pyc"
+    - "*.pyo"
+    - "*.log"
+    - "*.tmp"
+    - "*.swp"
+    - "*.bak"
+    - ".DS_Store"
+
+  # File extensions to include in indexing
+  include_extensions:
+    - .py
+    - .md
+    - .txt
+    - .json
+    - .yaml
+    - .yml
+    - .sql
+    - .sh
+    - .toml
+    - .ini
+    - .cfg
+    - .conf
+
+  # Maximum file size to index (in MB)
+  max_file_size_mb: 10
+
+  # Debounce delay for rapid file changes (in milliseconds)
+  debounce_ms: 100
+
+  # Batch size for queue insertions
+  batch_size: 50

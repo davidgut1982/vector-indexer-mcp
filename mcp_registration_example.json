@@ -1,0 +1,11 @@
+{
+  "vector-indexer": {
+    "command": "/srv/latvian_mcp/servers/vector-indexer-mcp/venv/bin/python",
+    "args": ["-m", "src"],
+    "env": {
+      "SUPABASE_URL": "https://zbhddlduxcwhgibhbeuu.supabase.co",
+      "SUPABASE_SERVICE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpiaGRkbGR1eGN3aGdpYmhiZXV1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NTE5Njk2OCwiZXhwIjoyMDgwNzcyOTY4fQ.rXVZXQaEvBbxh8npS2YQauW13oxD1gfttH0ZZjzFQ6o",
+      "EMBEDDING_MODEL": "paraphrase-multilingual-MiniLM-L12-v2"
+    }
+  }
+}

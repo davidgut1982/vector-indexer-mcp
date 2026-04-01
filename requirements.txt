@@ -1,0 +1,31 @@
+# Vector Indexer MCP Requirements
+
+# Embedding generation
+sentence-transformers>=2.2.0
+torch>=2.0.0
+
+# Token counting
+tiktoken>=0.5.0
+
+# Database clients (one will be used based on DB_BACKEND)
+supabase>=2.0.0
+postgrest-py>=0.10.0
+psycopg2-binary>=2.9.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# Utilities
+numpy>=1.24.0
+
+# File system monitoring
+watchdog>=3.0.0
+pyyaml>=6.0
+
+# MCP server
+mcp>=1.0.0
+
+# HTTP/SSE Transport
+uvicorn>=0.27.0
+starlette>=0.36.0
+sse-starlette>=1.8.0

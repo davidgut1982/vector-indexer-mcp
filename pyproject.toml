@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vector-indexer-mcp"
+version = "0.2.0"
+description = "Vector search indexing pipeline with embedding generation"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Latvian Lab", email = "info@latvianlab.com"}
+]
+keywords = ["mcp", "vector-search", "embeddings", "indexing", "semantic-search"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "mcp>=1.0.0",
+    "sentence-transformers>=2.2.0",
+    "torch>=2.7.0",  # Updated to match available PyPI versions
+    "tiktoken>=0.5.0",
+    "supabase>=2.0.0",
+    "postgrest>=0.13.0",
+    "python-dotenv>=1.0.0",
+    "numpy>=1.24.0",
+    "watchdog>=6.0.0",  # Required for file system monitoring in daemon.watcher
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "mypy>=1.0.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+vector-indexer-worker = "daemon.worker:main"
+vector-indexer-mcp = "src.server:main"
+
+[tool.setuptools]
+packages = ["daemon", "src", "utils"]
+
+[tool.setuptools.package-data]
+daemon = ["py.typed"]
+
+[tool.black]
+line-length = 88
+target-version = ["py310", "py311", "py312"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+select = ["E", "F", "I", "N", "W"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
