@@ -1,0 +1,10 @@
+[Unit]
+Description=Vector Indexer Periodic Re-index Timer
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=6h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

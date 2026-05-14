@@ -1,0 +1,13 @@
+[Unit]
+Description=Vector Indexer Periodic Re-index
+After=default.target
+# Ensure the worker is up before we dump a batch into the queue
+Wants=vector-indexer-worker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=INSTALL_DIR_PLACEHOLDER
+EnvironmentFile=INSTALL_DIR_PLACEHOLDER/.env
+ExecStart=INSTALL_DIR_PLACEHOLDER/venv/bin/python scripts/bulk_index.py --execute
+StandardOutput=journal
+StandardError=journal
