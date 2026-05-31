@@ -1,0 +1,22 @@
+# vector-indexer-mcp-http.service
+# Install: cp this file to ~/.config/systemd/user/
+# Then: systemctl --user daemon-reload && systemctl --user enable --now vector-indexer-mcp-http
+#
+# NOTE: Paths below (WorkingDirectory, ExecStart) are machine-specific.
+# Adjust them to match your actual checkout and venv location.
+
+[Unit]
+Description=Vector Indexer MCP HTTP/SSE Server (local asyncpg)
+After=vector-indexer-worker.service
+
+[Service]
+Type=simple
+WorkingDirectory=/home/david/vector-indexer-mcp
+ExecStart=/home/david/vector-indexer-mcp/venv/bin/python sse_server_local.py --port 5577 --host 127.0.0.1
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

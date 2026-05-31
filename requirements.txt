@@ -25,6 +25,9 @@ pyyaml>=6.0
 # MCP server
 mcp>=1.0.0
 
+# Local PostgreSQL backend (used by *_local.py modules)
+asyncpg>=0.29.0
+
 # HTTP/SSE Transport
 uvicorn>=0.27.0
 starlette>=0.36.0

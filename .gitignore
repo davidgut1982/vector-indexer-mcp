@@ -1,6 +1,11 @@
 # Environment files
 .env
 
+# Runtime config (secrets) — copy config.yaml.example → config.yaml and fill in
+config.yaml
+config.yaml.bak*
+*.bak*
+
 # Python
 __pycache__/
 *.py[cod]
@@ -34,10 +39,11 @@ env/
 *.swp
 *.swo
 
-# Model cache
+# Model cache / embedding cache
 .cache/
 models/
 sentence_transformers/
+embed_cache.json
 
 # Testing
 .pytest_cache/
