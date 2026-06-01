@@ -1,12 +1,14 @@
 """Asyncpg-based file watcher daemon for local PostgreSQL vector indexer."""
+
 import asyncio
-import asyncpg
 import logging
 import time
-import yaml
 from pathlib import Path
-from watchdog.observers import Observer
+
+import asyncpg
+import yaml
 from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
 
 logger = logging.getLogger(__name__)
 
@@ -39,33 +41,35 @@ class IndexEventHandler(FileSystemEventHandler):
 
     def on_created(self, event):
         if not event.is_directory:
-            self._enqueue(event.src_path, 'create')
+            self._enqueue(event.src_path, "create")
 
     def on_modified(self, event):
         if not event.is_directory:
-            self._enqueue(event.src_path, 'modify')
+            self._enqueue(event.src_path, "modify")
 
     def on_deleted(self, event):
         if not event.is_directory:
-            self._enqueue(event.src_path, 'delete')
+            self._enqueue(event.src_path, "delete")
 
     def on_moved(self, event):
         if not event.is_directory:
-            self._enqueue(event.src_path, 'delete')
-            self._enqueue(event.dest_path, 'create')
+            self._enqueue(event.src_path, "delete")
+            self._enqueue(event.dest_path, "create")
 
 
 class FileWatcherDaemon:
     def __init__(self, config_path: str = CONFIG_PATH):
         with open(config_path) as f:
             self.config = yaml.safe_load(f)
-        db = self.config['database']
+        db = self.config["database"]
         self.dsn = f"postgresql://{db['user']}:{db['password']}@{db['host']}:{db['port']}/{db['name']}"
-        w = self.config.get('watcher', {})
-        self.paths = w.get('paths', [])
-        self.extensions = set(w.get('extensions', ['.py', '.md']))
-        self.exclude_patterns = w.get('exclude_patterns', ['__pycache__', '.git', 'node_modules'])
-        self.debounce_ms = w.get('debounce_ms', 500)
+        w = self.config.get("watcher", {})
+        self.paths = w.get("paths", [])
+        self.extensions = set(w.get("extensions", [".py", ".md"]))
+        self.exclude_patterns = w.get(
+            "exclude_patterns", ["__pycache__", ".git", "node_modules"]
+        )
+        self.debounce_ms = w.get("debounce_ms", 500)
         self.queue = asyncio.Queue(maxsize=10000)
 
     async def start(self):
@@ -88,25 +92,31 @@ class FileWatcherDaemon:
         pending = {}
         while True:
             try:
-                path, event_type, ts = await asyncio.wait_for(self.queue.get(), timeout=debounce_s)
+                path, event_type, ts = await asyncio.wait_for(
+                    self.queue.get(), timeout=debounce_s
+                )
                 pending[(path, event_type)] = ts
             except asyncio.TimeoutError:
                 pass
             now = time.time()
-            to_flush = [(p, e) for (p, e), ts in list(pending.items()) if now - ts >= debounce_s]
+            to_flush = [
+                (p, e) for (p, e), ts in list(pending.items()) if now - ts >= debounce_s
+            ]
             if to_flush:
                 async with self.pool.acquire() as conn:
                     for path, event_type in to_flush:
                         await conn.execute(
                             "INSERT INTO index_queue(file_path, event_type, status) VALUES($1,$2,'pending') "
                             "ON CONFLICT DO NOTHING",
-                            path, event_type
+                            path,
+                            event_type,
                         )
                         del pending[(path, event_type)]
 
 
 if __name__ == "__main__":
     import sys
+
     logging.basicConfig(level=logging.INFO)
     config = sys.argv[1] if len(sys.argv) > 1 else CONFIG_PATH
     daemon = FileWatcherDaemon(config)

@@ -1,9 +1,14 @@
 """Embedding generator for local asyncpg-based vector indexer."""
+
 from typing import List
 
 
 class EmbeddingGenerator:
-    def __init__(self, model_name: str = "paraphrase-multilingual-MiniLM-L12-v2", device: str = "cpu"):
+    def __init__(
+        self,
+        model_name: str = "paraphrase-multilingual-MiniLM-L12-v2",
+        device: str = "cpu",
+    ):
         self.model_name = model_name
         self.device = device
         self._model = None
@@ -11,6 +16,7 @@ class EmbeddingGenerator:
     def _get_model(self):
         if self._model is None:
             from sentence_transformers import SentenceTransformer
+
             self._model = SentenceTransformer(self.model_name, device=self.device)
         return self._model
 

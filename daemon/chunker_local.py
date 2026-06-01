@@ -1,4 +1,5 @@
 """Token-aware text chunker for local asyncpg-based vector indexer."""
+
 from dataclasses import dataclass
 from typing import List
 
@@ -18,6 +19,7 @@ class TextChunker:
         self.overlap = overlap_tokens
         try:
             import tiktoken
+
             self.enc = tiktoken.get_encoding("cl100k_base")
             self._use_tiktoken = True
         except Exception:
@@ -40,13 +42,15 @@ class TextChunker:
             line_tokens = self._count_tokens(line)
             if current_tokens + line_tokens > self.chunk_size and current_lines:
                 chunk_text = "".join(current_lines)
-                chunks.append(TextChunk(
-                    text=chunk_text,
-                    start_line=start_line,
-                    end_line=line_num - 1,
-                    chunk_index=chunk_idx,
-                    token_count=current_tokens
-                ))
+                chunks.append(
+                    TextChunk(
+                        text=chunk_text,
+                        start_line=start_line,
+                        end_line=line_num - 1,
+                        chunk_index=chunk_idx,
+                        token_count=current_tokens,
+                    )
+                )
                 chunk_idx += 1
                 # Overlap: keep last N tokens worth of lines
                 overlap_lines = []
@@ -65,12 +69,14 @@ class TextChunker:
                 current_tokens += line_tokens
 
         if current_lines:
-            chunks.append(TextChunk(
-                text="".join(current_lines),
-                start_line=start_line,
-                end_line=len(lines),
-                chunk_index=chunk_idx,
-                token_count=current_tokens
-            ))
+            chunks.append(
+                TextChunk(
+                    text="".join(current_lines),
+                    start_line=start_line,
+                    end_line=len(lines),
+                    chunk_index=chunk_idx,
+                    token_count=current_tokens,
+                )
+            )
 
         return chunks

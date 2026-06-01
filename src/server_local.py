@@ -13,15 +13,16 @@ Tools:
 """
 
 import asyncio
-import asyncpg
 import json
 import logging
-import yaml
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
+
+import asyncpg
+import yaml
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
-from mcp.types import Tool, TextContent
+from mcp.types import TextContent, Tool
 
 logger = logging.getLogger(__name__)
 
@@ -30,16 +31,31 @@ CONFIG_PATH = "/home/david/vector-indexer-mcp/config.yaml"
 with open(CONFIG_PATH) as f:
     config = yaml.safe_load(f)
 
-db_cfg = config['database']
+db_cfg = config["database"]
 DSN = f"postgresql://{db_cfg['user']}:{db_cfg['password']}@{db_cfg['host']}:{db_cfg['port']}/{db_cfg['name']}"
 
 _pool = None
 _embedder = None
 
 INDEXABLE_EXTENSIONS = {
-    '.py', '.md', '.txt', '.json', '.yaml', '.yml', '.toml',
-    '.js', '.ts', '.tsx', '.jsx', '.html', '.css', '.sql',
-    '.sh', '.bash', '.ini', '.cfg'
+    ".py",
+    ".md",
+    ".txt",
+    ".json",
+    ".yaml",
+    ".yml",
+    ".toml",
+    ".js",
+    ".ts",
+    ".tsx",
+    ".jsx",
+    ".html",
+    ".css",
+    ".sql",
+    ".sh",
+    ".bash",
+    ".ini",
+    ".cfg",
 }
 
 
@@ -54,10 +70,11 @@ def get_embedder():
     global _embedder
     if _embedder is None:
         from sentence_transformers import SentenceTransformer
-        emb_cfg = config.get('embedding', {})
+
+        emb_cfg = config.get("embedding", {})
         _embedder = SentenceTransformer(
-            emb_cfg.get('model', 'paraphrase-multilingual-MiniLM-L12-v2'),
-            device=emb_cfg.get('device', 'cpu')
+            emb_cfg.get("model", "paraphrase-multilingual-MiniLM-L12-v2"),
+            device=emb_cfg.get("device", "cpu"),
         )
     return _embedder
 
@@ -77,10 +94,10 @@ async def list_tools():
                     "query": {"type": "string"},
                     "limit": {"type": "integer", "default": 20},
                     "threshold": {"type": "number", "default": 0.5},
-                    "paths": {"type": "array", "items": {"type": "string"}}
+                    "paths": {"type": "array", "items": {"type": "string"}},
                 },
-                "required": ["query"]
-            }
+                "required": ["query"],
+            },
         ),
         Tool(
             name="search_lexical",
@@ -90,10 +107,10 @@ async def list_tools():
                 "properties": {
                     "query": {"type": "string"},
                     "limit": {"type": "integer", "default": 20},
-                    "paths": {"type": "array", "items": {"type": "string"}}
+                    "paths": {"type": "array", "items": {"type": "string"}},
                 },
-                "required": ["query"]
-            }
+                "required": ["query"],
+            },
         ),
         Tool(
             name="search_hybrid",
@@ -104,15 +121,15 @@ async def list_tools():
                     "query": {"type": "string"},
                     "limit": {"type": "integer", "default": 20},
                     "alpha": {"type": "number", "default": 0.5},
-                    "paths": {"type": "array", "items": {"type": "string"}}
+                    "paths": {"type": "array", "items": {"type": "string"}},
                 },
-                "required": ["query"]
-            }
+                "required": ["query"],
+            },
         ),
         Tool(
             name="index_status",
             description="Get current index health and statistics",
-            inputSchema={"type": "object", "properties": {}}
+            inputSchema={"type": "object", "properties": {}},
         ),
         Tool(
             name="reindex_path",
@@ -122,21 +139,19 @@ async def list_tools():
                 "properties": {
                     "path": {"type": "string"},
                     "recursive": {"type": "boolean", "default": True},
-                    "force": {"type": "boolean", "default": False}
+                    "force": {"type": "boolean", "default": False},
                 },
-                "required": ["path"]
-            }
+                "required": ["path"],
+            },
         ),
         Tool(
             name="get_file_chunks",
             description="Get all indexed chunks for a specific file",
             inputSchema={
                 "type": "object",
-                "properties": {
-                    "file_path": {"type": "string"}
-                },
-                "required": ["file_path"]
-            }
+                "properties": {"file_path": {"type": "string"}},
+                "required": ["file_path"],
+            },
         ),
         Tool(
             name="search_similar_files",
@@ -145,10 +160,10 @@ async def list_tools():
                 "type": "object",
                 "properties": {
                     "file_path": {"type": "string"},
-                    "limit": {"type": "integer", "default": 10}
+                    "limit": {"type": "integer", "default": 10},
                 },
-                "required": ["file_path"]
-            }
+                "required": ["file_path"],
+            },
         ),
     ]
 
@@ -179,13 +194,17 @@ async def _dispatch(name: str, args: dict, pool) -> Any:
         return {"error": f"Unknown tool: {name}"}
 
 
-async def _search_semantic(pool, query: str, limit: int = 20, threshold: float = 0.5, paths=None):
+async def _search_semantic(
+    pool, query: str, limit: int = 20, threshold: float = 0.5, paths=None
+):
     embedder = get_embedder()
     q_emb = embedder.encode(query).tolist()
     where = "WHERE 1=1"
     params = [str(q_emb), limit]
     if paths:
-        conditions = " OR ".join([f"fm.file_path LIKE ${len(params)+i+1}" for i in range(len(paths))])
+        conditions = " OR ".join(
+            [f"fm.file_path LIKE ${len(params) + i + 1}" for i in range(len(paths))]
+        )
         where += f" AND ({conditions})"
         params.extend([f"{p}%" for p in paths])
     sql = f"""
@@ -200,14 +219,16 @@ async def _search_semantic(pool, query: str, limit: int = 20, threshold: float =
     """
     async with pool.acquire() as conn:
         rows = await conn.fetch(sql, *params)
-    return [dict(r) for r in rows if r['similarity'] >= threshold]
+    return [dict(r) for r in rows if r["similarity"] >= threshold]
 
 
 async def _search_lexical(pool, query: str, limit: int = 20, paths=None):
     where = "WHERE fc.fts_vector @@ plainto_tsquery('english', $1)"
     params = [query, limit]
     if paths:
-        conditions = " OR ".join([f"fm.file_path LIKE ${len(params)+i+1}" for i in range(len(paths))])
+        conditions = " OR ".join(
+            [f"fm.file_path LIKE ${len(params) + i + 1}" for i in range(len(paths))]
+        )
         where += f" AND ({conditions})"
         params.extend([f"{p}%" for p in paths])
     sql = f"""
@@ -223,28 +244,39 @@ async def _search_lexical(pool, query: str, limit: int = 20, paths=None):
     return [dict(r) for r in rows]
 
 
-async def _search_hybrid(pool, query: str, limit: int = 20, alpha: float = 0.5, paths=None):
+async def _search_hybrid(
+    pool, query: str, limit: int = 20, alpha: float = 0.5, paths=None
+):
     embedder = get_embedder()
     q_emb = embedder.encode(query).tolist()
     async with pool.acquire() as conn:
         rows = await conn.fetch(
             "SELECT * FROM search_hybrid($1, $2::vector, $3, $4)",
-            query, str(q_emb), limit, alpha
+            query,
+            str(q_emb),
+            limit,
+            alpha,
         )
     results = [dict(r) for r in rows]
     if paths:
-        results = [r for r in results if any(r['file_path'].startswith(p) for p in paths)]
+        results = [
+            r for r in results if any(r["file_path"].startswith(p) for p in paths)
+        ]
     return results[:limit]
 
 
 async def _index_status(pool):
     async with pool.acquire() as conn:
         health = await conn.fetchrow("SELECT get_index_health() as h")
-        pending = await conn.fetchval("SELECT COUNT(*) FROM index_queue WHERE status='pending'")
-        processing = await conn.fetchval("SELECT COUNT(*) FROM index_queue WHERE status='processing'")
+        pending = await conn.fetchval(
+            "SELECT COUNT(*) FROM index_queue WHERE status='pending'"
+        )
+        processing = await conn.fetchval(
+            "SELECT COUNT(*) FROM index_queue WHERE status='processing'"
+        )
     return {
-        "health": json.loads(health['h']) if health else {},
-        "queue": {"pending": pending, "processing": processing}
+        "health": json.loads(health["h"]) if health else {},
+        "queue": {"pending": pending, "processing": processing},
     }
 
 
@@ -256,12 +288,17 @@ async def _reindex_path(pool, path: str, recursive: bool = True, force: bool = F
         files = [str(p)] if p.suffix in INDEXABLE_EXTENSIONS else []
     else:
         glob_fn = p.rglob if recursive else p.glob
-        files = [str(f) for f in glob_fn("*") if f.is_file() and f.suffix in INDEXABLE_EXTENSIONS]
+        files = [
+            str(f)
+            for f in glob_fn("*")
+            if f.is_file() and f.suffix in INDEXABLE_EXTENSIONS
+        ]
     async with pool.acquire() as conn:
         for f in files:
             await conn.execute(
                 "INSERT INTO index_queue(file_path, event_type, status) VALUES($1,$2,'pending')",
-                f, 'modify' if force else 'create'
+                f,
+                "modify" if force else "create",
             )
     return {"queued": len(files), "path": path}
 
@@ -273,14 +310,15 @@ async def _get_file_chunks(pool, file_path: str):
             "fc.token_count, fm.indexed_at "
             "FROM file_chunks fc JOIN file_metadata fm ON fc.file_id=fm.id "
             "WHERE fm.file_path=$1 ORDER BY fc.chunk_index",
-            file_path
+            file_path,
         )
     return [dict(r) for r in rows]
 
 
 async def _search_similar_files(pool, file_path: str, limit: int = 10):
     async with pool.acquire() as conn:
-        rows = await conn.fetch("""
+        rows = await conn.fetch(
+            """
             WITH source_emb AS (
                 SELECT fe.embedding
                 FROM file_embeddings fe
@@ -296,14 +334,19 @@ async def _search_similar_files(pool, file_path: str, limit: int = 10):
             JOIN file_metadata fm ON fc.file_id = fm.id
             WHERE fm.file_path != $1
             ORDER BY similarity DESC LIMIT $2
-        """, file_path, limit)
+        """,
+            file_path,
+            limit,
+        )
     return [dict(r) for r in rows]
 
 
 async def main():
     logging.basicConfig(level=logging.INFO)
     async with stdio_server() as (read_stream, write_stream):
-        await server.run(read_stream, write_stream, server.create_initialization_options())
+        await server.run(
+            read_stream, write_stream, server.create_initialization_options()
+        )
 
 
 if __name__ == "__main__":

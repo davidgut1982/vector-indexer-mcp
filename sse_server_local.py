@@ -14,7 +14,6 @@ Usage:
 """
 
 import argparse
-import asyncio
 import logging
 import os
 import sys
@@ -25,17 +24,16 @@ _project_root = str(Path(__file__).resolve().parent)
 if _project_root not in sys.path:
     sys.path.insert(0, _project_root)
 
-import uvicorn
-from starlette.applications import Starlette
-from starlette.middleware import Middleware
-from starlette.middleware.cors import CORSMiddleware
-from starlette.routing import Route, Mount
-from starlette.responses import JSONResponse, Response
-from mcp.server.sse import SseServerTransport
+import uvicorn  # noqa: E402
+from mcp.server.sse import SseServerTransport  # noqa: E402
+from starlette.applications import Starlette  # noqa: E402
+from starlette.middleware import Middleware  # noqa: E402
+from starlette.middleware.cors import CORSMiddleware  # noqa: E402
+from starlette.responses import JSONResponse, Response  # noqa: E402
+from starlette.routing import Mount, Route  # noqa: E402
 
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger("vector-indexer-mcp-sse-local")
 
@@ -53,7 +51,9 @@ def create_app():
     sse = SseServerTransport("/messages/")
 
     async def handle_sse(request):
-        logger.info(f"SSE connection from {request.client.host if request.client else 'unknown'}")
+        logger.info(
+            f"SSE connection from {request.client.host if request.client else 'unknown'}"
+        )
         async with sse.connect_sse(
             request.scope, request.receive, request._send
         ) as streams:
@@ -63,11 +63,13 @@ def create_app():
         return _SseResponse()
 
     async def health(request):
-        return JSONResponse({
-            "status": "healthy",
-            "server": "vector-indexer-mcp",
-            "transport": "sse-local"
-        })
+        return JSONResponse(
+            {
+                "status": "healthy",
+                "server": "vector-indexer-mcp",
+                "transport": "sse-local",
+            }
+        )
 
     routes = [
         Route("/health", endpoint=health, methods=["GET"]),
@@ -90,8 +92,9 @@ def create_app():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--port", "-p", type=int,
-                        default=int(os.environ.get("MCP_SSE_PORT", "5577")))
+    parser.add_argument(
+        "--port", "-p", type=int, default=int(os.environ.get("MCP_SSE_PORT", "5577"))
+    )
     parser.add_argument("--host", default=os.environ.get("MCP_SSE_HOST", "127.0.0.1"))
     args = parser.parse_args()
 
