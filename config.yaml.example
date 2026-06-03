@@ -1,0 +1,35 @@
+database:
+  host: localhost
+  port: 5432
+  name: vectorindex
+  user: vectoruser
+  # Replace with your actual database password — never commit the real value
+  password: CHANGE_ME
+
+watcher:
+  # List the absolute paths you want the watcher to monitor.
+  # These are machine-specific; adjust for your environment.
+  # Note: paths outside the project root (e.g. /home/user/other-repo) are
+  # supported — the watcher follows them correctly.
+  paths:
+    - /path/to/your/project-one
+    - /path/to/your/project-two
+  debounce_ms: 500
+  extensions: [.py, .md, .txt, .yaml, .yml, .json, .toml, .sh, .sql, .ts, .js, .tsx, .jsx]
+  exclude_patterns: [__pycache__, .git, node_modules, .venv, venv, .cache, dist, build, .next, __snapshots__]
+
+embedding:
+  model: paraphrase-multilingual-MiniLM-L12-v2
+  batch_size: 32
+  device: cpu   # set to "cuda" if a GPU is available
+
+chunking:
+  chunk_size_tokens: 500
+  overlap_tokens: 50
+
+queue:
+  poll_interval_ms: 500
+  batch_size: 50
+
+server:
+  port: 5577

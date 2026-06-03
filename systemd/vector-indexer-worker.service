@@ -1,0 +1,22 @@
+# vector-indexer-worker.service
+# Install: cp this file to ~/.config/systemd/user/
+# Then: systemctl --user daemon-reload && systemctl --user enable --now vector-indexer-worker
+#
+# NOTE: Paths below (WorkingDirectory, ExecStart) are machine-specific.
+# Adjust them to match your actual checkout and venv location.
+
+[Unit]
+Description=Vector Indexer Worker (local asyncpg)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/david/vector-indexer-mcp
+ExecStart=/home/david/vector-indexer-mcp/venv/bin/python -m daemon.worker_local
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
